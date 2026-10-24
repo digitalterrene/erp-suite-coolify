@@ -27,6 +27,33 @@ You should see `crm`, `erpnext`, `frappe`, `helpdesk`, `hrms`, `insights`, `paym
 silently ignored, and the build still "succeeds". The build workflow in this repo uses the secret and refuses to
 push an image that is missing any app, so rebuild with a **new tag** and redeploy on fresh volumes.
 
+## `create-site` stops with "Deadlock found when trying to get lock" (error 1213)
+
+Two processes changed the same database rows at the same moment and MariaDB cancelled one. It is transient.
+`create-site` now puts the site in maintenance mode, pauses the scheduler while apps install, and retries each
+app up to four times. If an install still fails, the site stays in maintenance mode on purpose and the apps after
+the failing one are not tried. Fix the cause shown in the log, then redeploy: `create-site` installs whatever is
+missing and lifts maintenance mode when it finishes.
+
+To finish installing by hand from the `backend` terminal (replace the site name):
+
+```
+bench --site <SITE_NAME> set-maintenance-mode on
+bench --site <SITE_NAME> scheduler pause
+nohup bash -c 'for app in hrms telephony crm helpdesk insights; do echo "=== $app"; bench --site <SITE_NAME> install-app $app || break; done; echo FINISHED' > /tmp/install.log 2>&1 &
+tail -f /tmp/install.log
+```
+
+When it prints `FINISHED` with no errors:
+
+```
+bench --site <SITE_NAME> scheduler resume
+bench --site <SITE_NAME> set-maintenance-mode off
+bench --site <SITE_NAME> list-apps
+```
+
+`UNVERSIONED` next to an app in `list-apps` is normal. The image build removes the `.git` folders.
+
 ## The site loads but only "Framework" shows, and `/crm` is "page not found"
 
 The apps are in the image but were not installed on the site. This usually means `create-site` was interrupted

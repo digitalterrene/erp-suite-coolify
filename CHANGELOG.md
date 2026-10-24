@@ -7,6 +7,8 @@ and image tags are date-based (for example `2026-10-24`).
 ## [Unreleased]
 
 ### Fixed
+- `create-site` retries each app install up to four times and, while installing, puts the site in maintenance
+  mode with the scheduler paused. This avoids transient MariaDB deadlocks (error 1213) from concurrent writes.
 - Image build: pass `apps.json` as a BuildKit secret, as current `frappe_docker` requires. The old
   `APPS_JSON_BASE64` build argument is ignored by the new Containerfile and produced a frappe-only image.
 - Image build: the image is now built and checked **before** it is pushed. The run fails, and nothing is

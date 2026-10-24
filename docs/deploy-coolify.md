@@ -21,6 +21,8 @@ Developed against Coolify v4 (beta). Menu names may differ slightly in other ver
 4. **Deploy once, then wait.** Do **not** restart, redeploy, stop or change settings until `create-site` has
    finished. It installs every app one at a time and takes several minutes. Watch its logs for the final line
    `Done. Site ... is ready.` After that the container shows as *Exited*, which is normal for a run-once container.
+   While apps are being installed, the site shows a maintenance message. That is intentional: it keeps visitors
+   and background jobs away from the database. It switches off by itself when `create-site` finishes.
 5. **Log in** at `https://<SITE_NAME>` as `Administrator` with the `SERVICE_PASSWORD_ADMIN` value from the
    Environment Variables tab.
 6. **Verify.** Open `/desk` and confirm the app switcher lists ERPNext, HR, CRM, Helpdesk and Insights, then open

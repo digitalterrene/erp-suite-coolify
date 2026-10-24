@@ -66,6 +66,22 @@ services:
         wait-for-it -t 120 redis-cache:6379
         wait-for-it -t 120 redis-queue:6379
 
+        # Installing an app can hit a transient database deadlock if something else
+        # writes at the same moment, so retry a few times before giving up.
+        install_app() {
+          for attempt in 1 2 3 4; do
+            if bench --site "$$SITE_NAME" install-app "$$1"; then
+              return 0
+            fi
+            echo "Installing $$1 failed (attempt $$attempt of 4)."
+            if [ "$$attempt" -lt 4 ]; then
+              echo "Retrying in 20 seconds ..."
+              sleep 20
+            fi
+          done
+          return 1
+        }
+
         if [ ! -d "sites/$$SITE_NAME" ]; then
           echo "Creating site $$SITE_NAME ..."
           bench new-site "$$SITE_NAME" \
@@ -80,8 +96,6 @@ services:
           echo "Site $$SITE_NAME already exists."
         fi
 
-        # Install every requested app that is missing. Safe to run repeatedly,
-        # so an interrupted run is completed by the next start.
         if ! installed="$$(bench --site "$$SITE_NAME" list-apps)"; then
           echo "ERROR: site $$SITE_NAME exists but is not usable." >&2
           echo "An earlier run was probably interrupted while creating it." >&2
@@ -90,14 +104,26 @@ services:
         fi
         installed="$$(echo "$$installed" | awk '{print $$1}')"
 
+        missing=""
         for app in erpnext $$INSTALL_APPS; do
-          if echo "$$installed" | grep -qx "$$app"; then
-            echo "$$app is already installed."
-          else
-            echo "Installing $$app ..."
-            bench --site "$$SITE_NAME" install-app "$$app"
-          fi
+          echo "$$installed" | grep -qx "$$app" || missing="$$missing $$app"
         done
+
+        if [ -z "$$missing" ]; then
+          echo "All requested apps are already installed."
+        else
+          echo "Apps to install:$$missing"
+          # Keep visitors and background jobs away from the database while installing.
+          # If installation fails, the site stays in maintenance mode on purpose.
+          bench --site "$$SITE_NAME" set-maintenance-mode on
+          bench --site "$$SITE_NAME" scheduler pause
+          for app in $$missing; do
+            echo "Installing $$app ..."
+            install_app "$$app"
+          done
+          bench --site "$$SITE_NAME" scheduler resume
+          bench --site "$$SITE_NAME" set-maintenance-mode off
+        fi
         echo "Done. Site $$SITE_NAME is ready."
     environment:
       - 'SITE_NAME=${SITE_NAME:?Set SITE_NAME, e.g. erp.example.com}'
@@ -112,7 +138,7 @@ services:
     image: 'mariadb:11.8'
     restart: unless-stopped
     healthcheck:
-      test: ['CMD', 'healthcheck.sh', '--connect', '--innodb_initialized']
+      test: [ 'CMD', 'healthcheck.sh', '--connect', '--innodb_initialized' ]
       start_period: 30s
       interval: 10s
       timeout: 5s
@@ -131,7 +157,7 @@ services:
     image: 'redis:6.2-alpine'
     restart: unless-stopped
     healthcheck:
-      test: ['CMD', 'redis-cli', 'ping']
+      test: [ 'CMD', 'redis-cli', 'ping' ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -140,7 +166,7 @@ services:
     image: 'redis:6.2-alpine'
     restart: unless-stopped
     healthcheck:
-      test: ['CMD', 'redis-cli', 'ping']
+      test: [ 'CMD', 'redis-cli', 'ping' ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -154,7 +180,7 @@ services:
       configurator:
         condition: service_completed_successfully
     healthcheck:
-      test: ['CMD', 'wait-for-it', '-t', '1', '127.0.0.1:8000']
+      test: [ 'CMD', 'wait-for-it', '-t', '1', '127.0.0.1:8000' ]
       start_period: 30s
       interval: 15s
       timeout: 5s
@@ -173,7 +199,7 @@ services:
       - node
       - /home/frappe/frappe-bench/apps/frappe/socketio.js
     healthcheck:
-      test: ['CMD', 'wait-for-it', '-t', '1', '127.0.0.1:9000']
+      test: [ 'CMD', 'wait-for-it', '-t', '1', '127.0.0.1:9000' ]
       start_period: 30s
       interval: 15s
       timeout: 5s
@@ -194,7 +220,7 @@ services:
     command:
       - nginx-entrypoint.sh
     healthcheck:
-      test: ['CMD', 'wait-for-it', '-t', '1', '127.0.0.1:8080']
+      test: [ 'CMD', 'wait-for-it', '-t', '1', '127.0.0.1:8080' ]
       start_period: 30s
       interval: 15s
       timeout: 5s
