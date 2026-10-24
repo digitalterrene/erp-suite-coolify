@@ -112,7 +112,7 @@ services:
     image: 'mariadb:11.8'
     restart: unless-stopped
     healthcheck:
-      test: [ 'CMD', 'healthcheck.sh', '--connect', '--innodb_initialized' ]
+      test: ['CMD', 'healthcheck.sh', '--connect', '--innodb_initialized']
       start_period: 30s
       interval: 10s
       timeout: 5s
@@ -131,7 +131,7 @@ services:
     image: 'redis:6.2-alpine'
     restart: unless-stopped
     healthcheck:
-      test: [ 'CMD', 'redis-cli', 'ping' ]
+      test: ['CMD', 'redis-cli', 'ping']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -140,7 +140,7 @@ services:
     image: 'redis:6.2-alpine'
     restart: unless-stopped
     healthcheck:
-      test: [ 'CMD', 'redis-cli', 'ping' ]
+      test: ['CMD', 'redis-cli', 'ping']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -154,7 +154,7 @@ services:
       configurator:
         condition: service_completed_successfully
     healthcheck:
-      test: [ 'CMD', 'wait-for-it', '-t', '1', '127.0.0.1:8000' ]
+      test: ['CMD', 'wait-for-it', '-t', '1', '127.0.0.1:8000']
       start_period: 30s
       interval: 15s
       timeout: 5s
@@ -173,7 +173,7 @@ services:
       - node
       - /home/frappe/frappe-bench/apps/frappe/socketio.js
     healthcheck:
-      test: [ 'CMD', 'wait-for-it', '-t', '1', '127.0.0.1:9000' ]
+      test: ['CMD', 'wait-for-it', '-t', '1', '127.0.0.1:9000']
       start_period: 30s
       interval: 15s
       timeout: 5s
@@ -194,7 +194,7 @@ services:
     command:
       - nginx-entrypoint.sh
     healthcheck:
-      test: [ 'CMD', 'wait-for-it', '-t', '1', '127.0.0.1:8080' ]
+      test: ['CMD', 'wait-for-it', '-t', '1', '127.0.0.1:8080']
       start_period: 30s
       interval: 15s
       timeout: 5s
