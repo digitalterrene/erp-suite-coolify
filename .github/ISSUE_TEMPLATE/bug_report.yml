@@ -1,0 +1,49 @@
+name: Bug report
+description: Something does not build, deploy or work as documented.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping. **Never paste passwords, tokens or full environment dumps.** Redact them first.
+  - type: input
+    id: tag
+    attributes:
+      label: Image tag
+      description: The ERPNEXT_TAG you deployed, or the build you ran.
+      placeholder: "2026-10-24"
+    validations:
+      required: true
+  - type: input
+    id: coolify
+    attributes:
+      label: Coolify version
+      placeholder: "v4.0.0-beta.468"
+    validations:
+      required: true
+  - type: dropdown
+    id: stage
+    attributes:
+      label: Where does it fail?
+      options:
+        - Image build (GitHub Actions)
+        - Deploy (Coolify)
+        - create-site / app installation
+        - Routing / domain / HTTPS
+        - Email
+        - Backups / restore
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: For example the failing build step, or the logs of create-site or frontend. Redact secrets.
+      render: shell

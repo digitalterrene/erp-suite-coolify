@@ -1,0 +1,19 @@
+# Secrets and local config: never commit these
+.env
+.env.*
+*.env
+*.pem
+*.key
+
+# Backups and dumps
+*.sql
+*.sql.gz
+*.tar
+*.tar.gz
+backups/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
