@@ -13,6 +13,18 @@ routed for that hostname. Check, in this order:
 4. **An old stack still claims the hostname.** Delete previous test stacks that used the same domain.
 5. **Services not healthy.** A failing health check removes the container from routing. Check the service logs.
 
+## The site loads but only "Framework" shows, and `/crm` is "page not found"
+
+The apps are in the image but were not installed on the site. This usually means `create-site` was interrupted
+(for example by restarting or redeploying while it was still running). Check the `create-site` logs. With the
+current `compose.yaml`, redeploying completes missing apps. If it reports the site is "not usable", delete the
+stack including its volumes and deploy again, and this time leave it alone until you see `Done.`
+
+## Internal Server Error right after deploying
+
+Normal for the first minutes. The frontend starts before `create-site` has finished creating the site. Wait for the
+`Done. Site ... is ready.` line, then reload.
+
 ## Browser shows "Not secure"
 
 The certificate has not been issued or the domain was saved as `http://`. Use `https://`, make sure DNS already

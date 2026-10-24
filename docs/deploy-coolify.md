@@ -12,24 +12,26 @@ Developed against Coolify v4 (beta). Menu names may differ slightly in other ver
 
 ## Steps
 
-1. **New resource.** In your project choose *Docker Compose Empty* and paste in `compose.yaml`.
+1. **New resource.** In your project choose *Docker Compose Empty* and paste in `compose.yaml`. Click **Save**.
 2. **Variables.** Set `SITE_NAME`, `ERPNEXT_IMAGE` and `ERPNEXT_TAG` (see the README table).
    Leave **Connect To Predefined Network** unticked.
-3. **Deploy.** Coolify generates `SERVICE_PASSWORD_DBROOT`, `SERVICE_PASSWORD_ADMIN` and a placeholder
-   `*.sslip.io` address for the frontend.
-4. **Watch `create-site`.** Its logs show each app being installed. The first run takes several minutes.
-   It ends with `Site ... created` and then shows as *Exited*. That is normal for run-once containers.
-5. **Set the domain.** Open the `frontend` service, set Domains to `https://<SITE_NAME>:8080`, save and restart.
-   While testing you can keep the generated address as well, separated by a comma.
-6. **Log in** at `https://<SITE_NAME>` as `Administrator` with the `SERVICE_PASSWORD_ADMIN` value from the
+3. **Set the domain before the first deploy.** Open the `frontend` service and set Domains to
+   `https://<SITE_NAME>:8080`, then save. Coolify has already generated `SERVICE_PASSWORD_DBROOT`,
+   `SERVICE_PASSWORD_ADMIN` and a placeholder `*.sslip.io` address. The `:8080` only selects the container port.
+4. **Deploy once, then wait.** Do **not** restart, redeploy, stop or change settings until `create-site` has
+   finished. It installs every app one at a time and takes several minutes. Watch its logs for the final line
+   `Done. Site ... is ready.` After that the container shows as *Exited*, which is normal for a run-once container.
+5. **Log in** at `https://<SITE_NAME>` as `Administrator` with the `SERVICE_PASSWORD_ADMIN` value from the
    Environment Variables tab.
-7. **Verify.** Open `/desk`, `/crm`, `/helpdesk` and `/insights`. In the `backend` terminal run
-   `bench version` and confirm every app is listed.
-8. **Configure email** ([email.md](email.md)) and **backups** ([backups.md](backups.md)) before real use.
+6. **Verify.** Open `/desk` and confirm the app switcher lists ERPNext, HR, CRM, Helpdesk and Insights, then open
+   `/crm`, `/helpdesk` and `/insights`. In the `backend` terminal run `bench version` and confirm every app is listed.
+7. **Configure email** ([email.md](email.md)) and **backups** ([backups.md](backups.md)) before real use.
 
 ## Notes
 
 - The site name must equal the hostname users browse to. It is fixed when the site is created.
 - If you change `SITE_NAME` later, nothing renames the existing site. Start from fresh volumes instead.
-- If an app fails to install, the site exists with the apps before it. Retry in the `backend` terminal with
-  `bench --site <SITE_NAME> install-app <app>`, and open an issue with the error.
+- `create-site` is safe to run again. On every start it installs any requested app that is missing, so if a run
+  was interrupted, redeploying completes it. If it reports the site is "not usable", the site was only half
+  created. On a fresh install, delete the stack including its volumes and deploy again.
+- If an app fails to install, `create-site` stops with that app's error. Open an issue with the log.
