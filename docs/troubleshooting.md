@@ -13,6 +13,20 @@ routed for that hostname. Check, in this order:
 4. **An old stack still claims the hostname.** Delete previous test stacks that used the same domain.
 5. **Services not healthy.** A failing health check removes the container from routing. Check the service logs.
 
+## `create-site` fails with "No module named 'erpnext'", or the site only shows "Framework"
+
+The image does not contain the apps. Confirm in the `backend` terminal:
+
+```
+ls /home/frappe/frappe-bench/apps
+```
+
+You should see `crm`, `erpnext`, `frappe`, `helpdesk`, `hrms`, `insights`, `payments` and `telephony`. If only
+`frappe` is listed, the image was built without `apps.json`. Current `frappe_docker` expects `apps.json` as a
+**BuildKit secret** (`--secret id=apps_json,src=apps.json`). The older `APPS_JSON_BASE64` build argument is
+silently ignored, and the build still "succeeds". The build workflow in this repo uses the secret and refuses to
+push an image that is missing any app, so rebuild with a **new tag** and redeploy on fresh volumes.
+
 ## The site loads but only "Framework" shows, and `/crm` is "page not found"
 
 The apps are in the image but were not installed on the site. This usually means `create-site` was interrupted
