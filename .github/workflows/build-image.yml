@@ -40,10 +40,10 @@ jobs:
           fi
 
       - name: Checkout this repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Checkout frappe_docker (provides the Containerfile)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: frappe/frappe_docker
           path: frappe_docker
